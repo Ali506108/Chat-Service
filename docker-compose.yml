@@ -1,0 +1,41 @@
+
+services:
+  scylladb:
+    image: scylladb/scylla:5.2
+    container_name: chat-scylladb
+    ports:
+      - "9042:9042"
+    command: --smp 1 --memory 750M --overprovisioned 1 --api-address 0.0.0.0
+    volumes:
+      - scylla_data:/var/lib/scylla
+      - ./cassandra/init.cql:/init.cql
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'describe cluster'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: chat-redis
+    ports:
+      - "6378:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: chat-zipkin
+    ports:
+      - "9411:9411"
+    environment:
+      - STORAGE_TYPE=mem
+
+volumes:
+  scylla_data:
+  redis_data:

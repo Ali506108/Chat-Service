@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: chat-service
+  data:
+    cassandra:
+      repositories:
+        type: auto
+    redis:
+      host: localhost
+      port: 6378
+      timeout: 2000ms
+      connect-timeout: 1000ms
+      lettuce:
+        pool:
+          enabled: true
+          max-active: 20
+          max-idle: 20
+          min-idle: 5
+        shutdown-timeout: 100ms
+
+  cassandra:
+    port: 9042
+    contact-points: 127.0.0.1:9042
+    schema-action: create_if_not_exists
+    local-datacenter: datacenter1
+    keyspace-name: chat_keyspace
+    connection:
+      connect-timeout: 10s
+      init-query-timeout: 10s
+
