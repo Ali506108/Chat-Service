@@ -8,7 +8,7 @@ services:
     command: --smp 1 --memory 750M --overprovisioned 1 --api-address 0.0.0.0
     volumes:
       - scylla_data:/var/lib/scylla
-      - ./cassandra/init.cql:/init.cql
+      - ./scylladb/init.cql:/docker-entrypoint-initdb.d/init.cql
     healthcheck:
       test: ["CMD-SHELL", "cqlsh -e 'describe cluster'"]
       interval: 30s

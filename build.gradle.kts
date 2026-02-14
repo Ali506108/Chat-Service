@@ -32,7 +32,6 @@ dependencies {
 
 	// Database
 	implementation("org.springframework.boot:spring-boot-starter-data-redis-reactive")
-	implementation("org.springframework.boot:spring-boot-starter-cassandra")
 	implementation("org.springframework.boot:spring-boot-starter-data-cassandra-reactive")
 
 	// WebFlux and WebSocket

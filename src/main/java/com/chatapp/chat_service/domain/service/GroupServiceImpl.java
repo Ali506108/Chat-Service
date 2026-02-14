@@ -37,9 +37,10 @@ public class GroupServiceImpl implements GroupService {
                         log.debug("Group successfully saved to redis")
                 )
                 .map(mapper::toDto)
-                .onErrorResume(msg ->
-                        Mono.error(new RuntimeException("Failed to save group"))
-                );
+                .onErrorResume(msg -> {
+                    log.error("Failed to save group", msg);
+                    return Mono.error(new RuntimeException("Failed to save group , ", msg));
+                });
     }
 
     @Override
