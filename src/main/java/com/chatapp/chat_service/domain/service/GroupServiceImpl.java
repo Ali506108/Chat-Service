@@ -13,6 +13,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.time.Instant;
 import java.util.UUID;
 
 @Slf4j
@@ -74,6 +76,32 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public Mono<GroupDto> updateGroup(UUID groupID, CreateGroupDto dto) {
-        return null;
+        return repository.findById(groupID)
+                .flatMap(group -> updateGroup(group, dto))
+                .flatMap(redisService::saveGroup)
+                .doOnSuccess(success ->
+                        log.debug("Group successfully updated and saved to redis")
+                )
+                .map(mapper::toDto)
+                .onErrorResume(msg -> {
+                    log.error("Failed to update group", msg);
+                    return Mono.error(new RuntimeException("Failed to update group, ", msg));
+                });
+    }
+
+    private Mono<Group> updateGroup(Group group , CreateGroupDto dto){
+        Group updateGroup = mapper.toDomain(dto);
+
+        updateGroup.setGroupID(updateGroup.getGroupID());
+        updateGroup.setAdmin(dto.admin());
+
+        updateGroup.setTitle(dto.title());
+        updateGroup.setDescription(dto.description());
+        updateGroup.setMembers(dto.members());
+
+        updateGroup.setCreated_at(Instant.now());
+        updateGroup.setUpdated_at(Instant.now());
+
+        return repository.save(updateGroup);
     }
 }
