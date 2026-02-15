@@ -2,6 +2,7 @@ package com.chatapp.chat_service.domain.service;
 
 import com.chatapp.chat_service.api.dto.CreateGroupDto;
 import com.chatapp.chat_service.api.dto.GroupDto;
+import com.chatapp.chat_service.domain.exception.ServiceExceptions;
 import com.chatapp.chat_service.domain.model.Group;
 import com.chatapp.chat_service.domain.repository.GroupRepository;
 import com.chatapp.chat_service.infrastructure.mapper.GroupMapper;
@@ -14,8 +15,10 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
+import java.util.concurrent.TimeoutException;
 
 @Slf4j
 @Service
@@ -31,18 +34,12 @@ public class GroupServiceImpl implements GroupService {
         return Mono.just(dto)
                 .map(mapper::toDomain)
                 .flatMap(repository::save)
-                .doOnSuccess(msg ->
-                        log.debug("Group successfully saved : {} {} " , msg.getGroupID() , msg.getTitle())
-                )
                 .flatMap(redisService::saveGroup)
-                .doOnSuccess(msg ->
-                        log.debug("Group successfully saved to redis")
-                )
                 .map(mapper::toDto)
-                .onErrorResume(msg -> {
-                    log.error("Failed to save group", msg);
-                    return Mono.error(new RuntimeException("Failed to save group , ", msg));
-                });
+                .timeout(Duration.ofSeconds(5))
+                .onErrorResume(TimeoutException.class , ex ->
+                        Mono.error(new ServiceExceptions("Timeout while creating group"))
+                );
     }
 
     @Override
@@ -56,6 +53,7 @@ public class GroupServiceImpl implements GroupService {
                                 )
 
                 )).map(mapper::toDto)
+                .timeout(Duration.ofSeconds(3))
                 .onErrorMap(msg ->
                         new RuntimeException("Failed to find group by id: " + groupID)
                 );
@@ -65,10 +63,7 @@ public class GroupServiceImpl implements GroupService {
     public Flux<GroupDto> getAllGroup(int page , int size) {
         return repository.findAllBy(PageRequest.of(page , size))
                 .map(mapper::toDto)
-                .doOnNext(msg ->
-                        log.debug("Fetched group: {} ", msg)
-                )
-                .switchIfEmpty(Flux.empty())
+                .timeout(Duration.ofSeconds(3))
                 .onErrorResume(msg ->
                         Flux.error(new RuntimeException("Failed to fetch all groups"))
                 );
@@ -83,6 +78,7 @@ public class GroupServiceImpl implements GroupService {
                         log.debug("Group successfully updated and saved to redis")
                 )
                 .map(mapper::toDto)
+                .timeout(Duration.ofSeconds(5))
                 .onErrorResume(msg -> {
                     log.error("Failed to update group", msg);
                     return Mono.error(new RuntimeException("Failed to update group, ", msg));
@@ -90,18 +86,17 @@ public class GroupServiceImpl implements GroupService {
     }
 
     private Mono<Group> updateGroup(Group group , CreateGroupDto dto){
-        Group updateGroup = mapper.toDomain(dto);
 
-        updateGroup.setGroupID(updateGroup.getGroupID());
-        updateGroup.setAdmin(dto.admin());
+        group.setGroupID(group.getGroupID());
+        group.setAdmin(dto.admin());
 
-        updateGroup.setTitle(dto.title());
-        updateGroup.setDescription(dto.description());
-        updateGroup.setMembers(dto.members());
+        group.setTitle(dto.title());
+        group.setDescription(dto.description());
+        group.setMembers(dto.members());
 
-        updateGroup.setCreated_at(Instant.now());
-        updateGroup.setUpdated_at(Instant.now());
+        group.setCreated_at(Instant.now());
+        group.setUpdated_at(Instant.now());
 
-        return repository.save(updateGroup);
+        return repository.save(group);
     }
 }

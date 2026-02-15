@@ -5,7 +5,11 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.time.Duration;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -13,9 +17,13 @@ import reactor.core.publisher.Mono;
 public class GroupRedisService {
 
     private final ReactiveRedisTemplate<String, Group> redisTemplate;
+    private static final Duration GROUP_TTL  = Duration.ofMinutes(30);
+    private static final String GROUP_PREFIX = "group:";
 
     public Mono<Group> saveGroup(Group group) {
-        return redisTemplate.opsForValue().set(group.getGroupID().toString() , group)
+        String key = GROUP_PREFIX + group.getGroupID();
+        return redisTemplate.opsForValue()
+                .set(key , group , GROUP_TTL)
                 .thenReturn(group)
                 .doOnSuccess(g -> log.debug("Cached group : {} " , g.getGroupID()))
                 .onErrorResume(err -> {
@@ -26,7 +34,8 @@ public class GroupRedisService {
     }
 
     public Mono<Group> getGroupById(String groupID) {
-        return redisTemplate.opsForValue().get(groupID)
+        String key = GROUP_PREFIX + groupID;
+        return redisTemplate.opsForValue().get(key)
                 .doOnSuccess(group -> log.debug("Data retrieved successfully"))
                 .onErrorResume(err -> {
                     log.error("Error retrieving data from redis {}", err.getMessage());
@@ -35,7 +44,8 @@ public class GroupRedisService {
     }
 
     public Mono<Group> deleteGroup(String groupID) {
-        return redisTemplate.opsForValue().delete(groupID)
+        String key = GROUP_PREFIX + groupID;
+        return redisTemplate.opsForValue().delete(key)
                 .doOnSuccess(msg -> log.debug("Data deleted successfully"))
                 .onErrorResume(err -> {
                     log.error("Error deleting data from redis {}", err.getMessage());
@@ -44,4 +54,8 @@ public class GroupRedisService {
                 .then(getGroupById(groupID));
     }
 
+    public Flux<Group> saveAll(List<Group> groups) {
+        return Flux.fromIterable(groups)
+                .flatMap(this::saveGroup , 8);
+    }
 }

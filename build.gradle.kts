@@ -27,7 +27,7 @@ repositories {
 dependencies {
 
 	// log
-	implementation("org.springframework.boot:spring-boot-micrometer-tracing-brave")
+	implementation("org.springframework.boot:spring-boot-starter-zipkin")
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
 
 	// Database
@@ -37,10 +37,6 @@ dependencies {
 	// WebFlux and WebSocket
 	implementation("org.springframework.boot:spring-boot-starter-webflux")
 	//implementation("org.springframework.boot:spring-boot-starter-websocket")
-
-	// tracing logging
-	implementation("org.springframework.boot:spring-boot-starter-zipkin")
-	implementation("io.micrometer:micrometer-tracing-bridge-brave")
 
 	// lombok
 	compileOnly("org.projectlombok:lombok")
