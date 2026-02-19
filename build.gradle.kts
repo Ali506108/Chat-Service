@@ -27,6 +27,7 @@ repositories {
 dependencies {
 
 	// log
+	implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.21.0")
 	implementation("org.springframework.boot:spring-boot-starter-zipkin")
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
 
@@ -36,7 +37,7 @@ dependencies {
 
 	// WebFlux and WebSocket
 	implementation("org.springframework.boot:spring-boot-starter-webflux")
-	//implementation("org.springframework.boot:spring-boot-starter-websocket")
+	implementation("org.springframework.boot:spring-boot-starter-websocket")
 
 	// lombok
 	compileOnly("org.projectlombok:lombok")

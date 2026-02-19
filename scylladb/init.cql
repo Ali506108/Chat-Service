@@ -16,18 +16,19 @@ CREATE TABLE IF NOT EXISTS "Group" (
                                        updated_at timestamp
 );
 
-CREATE TABLE IF NOT EXISTS direct_message (
-                                              messageid uuid PRIMARY KEY,
-                                              userfrom uuid,
-                                              userto uuid,
-                                              content text,
-                                              created_at timestamp
+create table if not exists "direct_chat" (
+    chatId uuid primary key ,
+    senderUserId uuid,
+    receiverUserId uuid
 );
 
-CREATE TABLE IF NOT EXISTS "GroupMessage" (
-                                              messageid uuid PRIMARY KEY,
-                                              chanelid uuid,
-                                              userfrom uuid,
-                                              content text,
-                                              created_at timestamp
+
+create table if not exists "messages" (
+    chatId uuid primary key ,
+    messageID uuid primary key ,
+    senderId uuid,
+    content text,
+    status text,
+    createdAt timestamp,
+    updatedAt timestamp
 );
