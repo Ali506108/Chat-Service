@@ -1,4 +1,25 @@
 services:
+
+  app:
+    build: .
+    ports:
+      - "9393:9393"
+    container_name: chat-service
+    depends_on:
+      - scylladb
+      - redis
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: 2
+          memory: 512M
+        reservations:
+          cpus: 0.5
+          memory: 256M
+    networks:
+      - chat-net
+
   scylladb:
     image: scylladb/scylla:5.2
     container_name: chat-scylladb
@@ -13,7 +34,8 @@ services:
       timeout: 10s
       retries: 10
       start_period: 30s
-
+    networks:
+      - chat-net
   scylla-init:
     image: scylladb/scylla:5.2
     container_name: chat-scylladb-init
@@ -24,6 +46,8 @@ services:
       - ./scylladb/init.cql:/init.cql
     entrypoint: ["bash", "-c", "sleep 5 && cqlsh scylladb -f /init.cql && echo 'Init complete!'"]
     restart: "no"
+    networks:
+      - chat-net
 
   redis:
     image: redis:7-alpine
@@ -37,6 +61,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+    networks:
+      - chat-net
 
   zipkin:
     image: openzipkin/zipkin:latest
@@ -45,7 +71,14 @@ services:
       - "9411:9411"
     environment:
       - STORAGE_TYPE=mem
+    networks:
+      - chat-net
+    restart: unless-stopped
 
 volumes:
   scylla_data:
   redis_data:
+
+networks:
+  chat-net:
+    name: chat-network

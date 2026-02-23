@@ -48,9 +48,10 @@ dependencies {
 	testImplementation("io.projectreactor:reactor-test")
 
 	// Testcontainers (with versions)
+	implementation("org.springframework.boot:spring-boot-test-autoconfigure:4.1.0-M2")
 	testImplementation("org.testcontainers:testcontainers:1.20.3")
 	testImplementation("org.testcontainers:junit-jupiter:1.20.3")
-	testImplementation("org.testcontainers:cassandra:1.20.3")
+	testImplementation("org.testcontainers:cassandra:1.21.4")
 
 	// Other test dependencies
 	testImplementation("org.springframework.boot:spring-boot-micrometer-tracing-test")
@@ -60,6 +61,9 @@ dependencies {
 	testImplementation("org.springframework.boot:spring-boot-starter-zipkin-test")
 
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+	testImplementation("com.redis:testcontainers-redis:2.2.4")
+	testImplementation("org.testcontainers:testcontainers:2.0.3")
+
 }
 
 tasks.withType<Test> {
